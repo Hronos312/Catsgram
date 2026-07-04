@@ -4,11 +4,10 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.catsgram.exception.ConditionsNotMetException;
 import ru.yandex.practicum.catsgram.exception.NotFoundException;
 import ru.yandex.practicum.catsgram.model.Post;
+import ru.yandex.practicum.catsgram.model.SortOrder;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 // Указываем, что класс PostService - является бином и его
 // нужно добавить в контекст приложения
@@ -21,15 +20,31 @@ public class PostService {
         this.userService = userService;
     }
 
-    public Collection<Post> findAll() {
-        return posts.values();
+    public Collection<Post> findAll(SortOrder sort, Integer from, Integer size) {
+        if (size <= 0) {
+            throw new ConditionsNotMetException("Размер выборки должен быть больше нуля");
+        }
+        Comparator<Post> comparator = Comparator.comparing(Post::getPostDate);
+        if (sort == SortOrder.DESCENDING) {
+            comparator = comparator.reversed();
+        }
+        return posts.values()
+                .stream()
+                .sorted(comparator)
+                .skip(from)
+                .limit(size)
+                .toList();
+    }
+
+    public Optional<Post> findById(long postId) {
+        return Optional.ofNullable(posts.get(postId));
     }
 
     public Post create(Post post) {
         if (post.getDescription() == null || post.getDescription().isBlank()) {
             throw new ConditionsNotMetException("Описание не может быть пустым");
         }
-        if (userService.findUserById(post.getAuthorId()).isEmpty()) {
+        if (userService.findById(post.getAuthorId()).isEmpty()) {
             throw new ConditionsNotMetException("Автор с id = " + post.getAuthorId() + " не найден");
         }
 
