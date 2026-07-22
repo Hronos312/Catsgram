@@ -21,9 +21,6 @@ public class PostService {
     }
 
     public Collection<Post> findAll(SortOrder sort, Integer from, Integer size) {
-        if (size <= 0) {
-            throw new ConditionsNotMetException("Размер выборки должен быть больше нуля");
-        }
         Comparator<Post> comparator = Comparator.comparing(Post::getPostDate);
         if (sort == SortOrder.DESCENDING) {
             comparator = comparator.reversed();
