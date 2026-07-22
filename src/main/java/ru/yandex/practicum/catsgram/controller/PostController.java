@@ -2,6 +2,7 @@ package ru.yandex.practicum.catsgram.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.catsgram.exception.ParameterNotValidException;
 import ru.yandex.practicum.catsgram.model.Post;
 import ru.yandex.practicum.catsgram.model.SortOrder;
 import ru.yandex.practicum.catsgram.service.PostService;
@@ -30,7 +31,30 @@ public class PostController {
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size
     ) {
-        return postService.findAll(SortOrder.from(sort), from, size);
+        SortOrder sortOrder = SortOrder.from(sort);
+
+        if (sortOrder == null) {
+            throw new ParameterNotValidException(
+                    "sort",
+                    "Получено: " + sort + ", должно быть: asc или desc"
+            );
+        }
+
+        if (size <= 0) {
+            throw new ParameterNotValidException(
+                    "size",
+                    "Некорректный размер выборки. Размер должен быть больше нуля"
+            );
+        }
+
+        if (from < 0) {
+            throw new ParameterNotValidException(
+                    "from",
+                    "Начало выборки должно быть положительным числом"
+            );
+        }
+
+        return postService.findAll(sortOrder, from, size);
     }
 
     @PostMapping
